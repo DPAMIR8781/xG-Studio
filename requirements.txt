@@ -2,6 +2,7 @@
 statsbombpy
 pandas
 numpy
+pyarrow          # parquet okuma/yazma (cache)
 
 # --- ML ---
 scikit-learn
