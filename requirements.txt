@@ -1,0 +1,26 @@
+# --- Veri ---
+statsbombpy
+pandas
+numpy
+
+# --- ML ---
+scikit-learn
+xgboost
+lightgbm
+joblib
+
+# --- Görselleştirme ---
+matplotlib
+mplsoccer        # futbol sahası / şut haritası çizimi
+
+# --- Arayüz ---
+streamlit
+
+# --- GCP / BigQuery ---
+google-cloud-bigquery
+db-dtypes
+
+# --- AI katmanı (Gemini) ---
+google-generativeai
+
+# Not: ortam oturunca `pip freeze > requirements.txt` ile versiyonları sabitleyin.
