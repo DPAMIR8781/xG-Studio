@@ -7,8 +7,8 @@ arayüzü ve Gemini Flash destekli AI yorum katmanı. Local'de eğitim, GCP'de s
 
 ## Ekip
 - Uğur Batuhan Tuna (proje koordinasyonu / entegrasyon)
-- [Ekip üyesi 2]
-- [Ekip üyesi 3]
+- Doruk Pamir
+- Mert Kaan Topuz
 
 ## Ne yapıyor?
 Kullanıcı saha üzerinde bir şut konumlandırır (yer, ayak/kafa, savunma baskısı), model
