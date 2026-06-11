@@ -16,6 +16,14 @@ import sys, time, pathlib
 import pandas as pd
 from statsbombpy import sb
 
+# --- statsbombpy "credentials not supplied" uyarısını sustur (açık veri kullanıyoruz) ---
+import warnings
+try:
+    from statsbombpy.api_client import NoAuthWarning
+    warnings.simplefilter("ignore", NoAuthWarning)
+except Exception:
+    warnings.filterwarnings("ignore", message=".*credentials were not supplied.*")
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from config.leagues import LEAGUES
 
@@ -64,9 +72,9 @@ def fetch_season(lg):
 def main():
     all_frames = []
     for i, lg in enumerate(LEAGUES, 1):
-        print(f"[{i}/{len(LEAGUES)}] {lg['name']} ...")
+        print(f"[{i}/{len(LEAGUES)}] {lg['name']} ...", flush=True)
         df = fetch_season(lg)
-        print(f"    -> {len(df)} şut")
+        print(f"    -> {len(df)} şut", flush=True)
         if len(df):
             all_frames.append(df)
 

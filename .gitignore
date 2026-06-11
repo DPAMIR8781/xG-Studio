@@ -1,34 +1,19 @@
-# --- Python ---
+# Python
 __pycache__/
-*.py[cod]
-*.egg-info/
-.ipynb_checkpoints/
-venv/
+*.pyc
 .venv/
-env/
-
-# --- Ortam & gizli anahtarlar (ASLA commit etme) ---
+venv/
 .env
-*.json          # GCP servis hesabı anahtarları buraya düşmesin
-!config/*.json  # config altındaki örnek/şablon json'lara izin ver
-credentials/
-*-key.json
-service-account*.json
 
-# --- Büyük veri dosyaları (git yerine local/Drive'da tutun) ---
-data/*.csv
-data/*.parquet
-data/*.json
+# statsbombpy HTTP cache (diski doldurur)
+*.sqlite
+
+# Ara/ham veri — yeniden üretilebilir (final parquet'ler tutulur)
 data/raw/
-data/processed/
-!data/.gitkeep
+data/ff_parts/
+data/freeze_cache/
+data/_*.parquet
+data/laliga*_freeze.parquet
 
-# --- Modeller ---
-models/*.joblib
-models/*.pkl
-!models/.gitkeep
-
-# --- OS / editor ---
-.DS_Store
-.vscode/
-.idea/
+# Streamlit geçici görsel
+app/_pitch.png
