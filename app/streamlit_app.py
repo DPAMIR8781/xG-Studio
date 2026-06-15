@@ -43,7 +43,8 @@ FIXED = dict(technique="Normal", play_pattern="Regular Play",
 GOLD = "#F2A91E"; BG = "#0C3326"; PANEL = "#11402F"
 MINT = "#9CC4B3"; CREAM = "#F3F7F4"; LINE = "#1d5740"
 
-st.set_page_config(page_title="xG Stüdyo", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="xG Stüdyo", layout="wide", page_icon="⚽",
+                   initial_sidebar_state="expanded")
 
 
 def inject_css():
@@ -51,8 +52,11 @@ def inject_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
     .stApp {{ background:{BG}; }}
-    /* daha temiz demo: streamlit menü/başlık/footer gizle */
-    #MainMenu, header[data-testid="stHeader"], footer {{ visibility:hidden; height:0; }}
+    /* daha temiz demo: sadece menü/toolbar/footer gizle — header kalsın ki
+       sidebar açma oku çalışsın */
+    #MainMenu, [data-testid="stToolbar"], footer {{ visibility:hidden; height:0; }}
+    header[data-testid="stHeader"] {{ background:transparent; }}
+    [data-testid="stSidebarCollapsedControl"] {{ visibility:visible; }}
     .block-container {{ max-width:1040px; margin:0 auto; padding-top:1.1rem; }}
     html, body, [class*="css"] {{ font-family:'Inter',-apple-system,sans-serif; }}
     h1, h2, h3 {{ font-family:'Poppins',sans-serif; }}
@@ -74,6 +78,9 @@ def inject_css():
     .xg-meta {{ color:{MINT}; font-size:12.5px; margin-bottom:.8rem; }}
     .xg-delta {{ display:inline-block; margin-left:.45rem; padding:1px 9px; border-radius:999px;
                  background:{BG}; border:1px solid {LINE}; color:{CREAM}; font-size:12px; }}
+    .xg-chips {{ margin:.1rem 0 .7rem; }}
+    .xg-chip {{ display:inline-block; padding:2px 9px; margin:0 5px 5px 0; border-radius:999px;
+                font-size:11.5px; font-weight:500; }}
     .xg-note {{ background:{BG}; border-left:3px solid {GOLD}; border-radius:8px;
                 padding:11px 13px; color:#dcebe2; font-size:14px; line-height:1.45; }}
     .xg-foot {{ color:{MINT}; font-size:12px; line-height:1.55; border-top:1px solid {LINE};
@@ -224,7 +231,17 @@ def xg_color(v):
     return "#6ee7a8" if v >= 0.4 else GOLD if v >= 0.2 else "#f2a623" if v >= 0.1 else "#e8917f"
 
 
-def result_card(title, sub_label, xg, meta, note, delta=None):
+def chip(label, active=False, accent=False):
+    if accent:
+        style = f"background:{BG};border:1px solid {GOLD};color:{GOLD};"
+    elif active:
+        style = f"background:{BG};border:1px solid {LINE};color:{CREAM};"
+    else:
+        style = f"background:transparent;border:1px solid {LINE};color:{MINT};opacity:.55;"
+    return f"<span class='xg-chip' style='{style}'>{label}</span>"
+
+
+def result_card(title, sub_label, xg, meta, note, chips="", delta=None):
     delta_html = ""
     if delta is not None:
         sign = "+" if delta >= 0 else ""
@@ -234,6 +251,7 @@ def result_card(title, sub_label, xg, meta, note, delta=None):
             f"<div class='xg-card-sub'>{sub_label}</div>"
             f"<div class='xg-num' style='color:{xg_color(xg)}'>{xg:.2f}</div>"
             f"<div class='xg-meta'>{meta}{delta_html}</div>"
+            f"<div class='xg-chips'>{chips}</div>"
             f"<div class='xg-note'>{note}</div>"
             f"</div>")
 
@@ -256,7 +274,10 @@ with st.sidebar:
     head = st.toggle("Kafa şutu", value=False)
     pres = st.toggle("Baskı altında", value=False)
     st.markdown("**Freeze — gelişmiş kontroller**")
-    cone = st.select_slider("Önündeki savunmacı", options=[0, 1, 2], value=0)
+    cone = st.segmented_control("Önündeki savunmacı", options=[0, 1, 2],
+                                default=0, selection_mode="single")
+    if cone is None:
+        cone = 0
     gk_off = st.toggle("Kaleci çizgiden çıkmış", value=False)
     st.caption("Varsayılan (0 savunmacı + kaleci çizgide) = açık şut → tek-tık deneyimi.")
     st.divider()
@@ -330,13 +351,25 @@ ctx_f = dict(model="freeze", dist=dist, ang=ang, head=head, pres=pres,
 note_b = ai_comment(xb, ctx_b, "b")
 note_f = ai_comment(xf, ctx_f, "f")
 
+# kullanılan sinyaller (feature chip'leri) — freeze'e özel olanlar gold vurgulu
+if penalty:
+    chips_b = chip("Penaltı noktası", active=True) + chip("12 m", active=True) + chip("Ayak", active=True)
+    chips_f = chips_b + chip("Kaleci (penaltı profili)", accent=True)
+else:
+    body = "Kafa" if head else "Ayak"
+    chips_b = (chip(f"Mesafe {dist:.0f} m", active=True) + chip(f"Açı {ang:.0f}°", active=True)
+               + chip(body, active=True) + chip("Baskı", active=pres))
+    chips_f = (chips_b
+               + chip(f"Savunmacı {cone}", accent=True)
+               + chip("Kaleci " + ("çıkmış" if gk_off else "çizgide"), accent=True))
+
 col_b, col_f = st.columns(2, gap="large")
 with col_b:
     st.markdown(result_card("Baseline model", "dokunulmamış ilk model · 75k şut",
-                            xb, meta, note_b), unsafe_allow_html=True)
+                            xb, meta, note_b, chips=chips_b), unsafe_allow_html=True)
 with col_f:
     st.markdown(result_card("Freeze model", "freeze-eğitimli · gelişmiş kontroller",
-                            xf, meta, note_f, delta=xf - xb), unsafe_allow_html=True)
+                            xf, meta, note_f, chips=chips_f, delta=xf - xb), unsafe_allow_html=True)
 
 st.markdown("<div class='center-note'>Baseline savunmayı görmez — savunmacı/kaleci kontrolü "
             "yalnızca freeze modeli değiştirir.</div>", unsafe_allow_html=True)
