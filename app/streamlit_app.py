@@ -52,11 +52,14 @@ def inject_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
     .stApp {{ background:{BG}; }}
-    /* daha temiz demo: sadece menü/toolbar/footer gizle — header kalsın ki
-       sidebar açma oku çalışsın */
+    /* daha temiz demo: sadece menü/toolbar/footer gizle — header kalsın */
     #MainMenu, [data-testid="stToolbar"], footer {{ visibility:hidden; height:0; }}
     header[data-testid="stHeader"] {{ background:transparent; }}
-    [data-testid="stSidebarCollapsedControl"] {{ visibility:visible; }}
+    /* sidebar sola SABİT: her durumda görünür, kapanamaz (demo güvenliği) */
+    section[data-testid="stSidebar"] {{ transform:none !important; visibility:visible !important;
+        min-width:300px !important; margin-left:0 !important; }}
+    [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {{ display:none !important; }}
     .block-container {{ max-width:1040px; margin:0 auto; padding-top:1.1rem; }}
     html, body, [class*="css"] {{ font-family:'Inter',-apple-system,sans-serif; }}
     h1, h2, h3 {{ font-family:'Poppins',sans-serif; }}
