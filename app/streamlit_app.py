@@ -17,6 +17,10 @@ AI yorum katmanı: senaryo başına KÜÇÜK VARYANT HAVUZU cache'lenir (slayt 8
     streamlit run app/streamlit_app.py
 
 Modeller: models/xg_model.joblib (baseline) + models/xg_model_freeze.joblib (freeze)
+
+NOT (tasarım): Bu sürümde yalnızca SUNUM KATMANI deck temasına göre yeniden
+düzenlendi (renkler, ortalanmış saha, kart düzeni). Model/feature/AI mantığı
+önceki sürümle birebir aynıdır.
 """
 import os
 from pathlib import Path
@@ -35,7 +39,52 @@ MAX_VARIANTS = 3                  # senaryo başına AI yorum havuzu boyutu
 FIXED = dict(technique="Normal", play_pattern="Regular Play",
              shot_first_time=0, shot_one_on_one=0)
 
-st.set_page_config(page_title="xG Stüdyo", layout="wide")
+# Deck paleti
+GOLD = "#F2A91E"; BG = "#0C3326"; PANEL = "#11402F"
+MINT = "#9CC4B3"; CREAM = "#F3F7F4"; LINE = "#1d5740"
+
+st.set_page_config(page_title="xG Stüdyo", layout="wide", page_icon="⚽")
+
+
+def inject_css():
+    st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+    .stApp {{ background:{BG}; }}
+    /* daha temiz demo: streamlit menü/başlık/footer gizle */
+    #MainMenu, header[data-testid="stHeader"], footer {{ visibility:hidden; height:0; }}
+    .block-container {{ max-width:1040px; margin:0 auto; padding-top:1.1rem; }}
+    html, body, [class*="css"] {{ font-family:'Inter',-apple-system,sans-serif; }}
+    h1, h2, h3 {{ font-family:'Poppins',sans-serif; }}
+    section[data-testid="stSidebar"] {{ background:{PANEL}; border-right:1px solid {LINE}; }}
+
+    .xg-h1 {{ font-family:'Poppins'; font-size:40px; font-weight:700; color:{CREAM};
+              text-align:center; letter-spacing:-.5px; margin:.2rem 0 .15rem; }}
+    .xg-h1 .accent {{ color:{GOLD}; }}
+    .xg-sub {{ text-align:center; color:{MINT}; font-size:15px; max-width:680px;
+               margin:0 auto 1.1rem; line-height:1.5; }}
+    .pitch-hint {{ text-align:center; color:{MINT}; font-size:13px; margin:.3rem 0 .5rem; }}
+
+    .xg-card {{ background:{PANEL}; border:1px solid {LINE}; border-radius:16px;
+                padding:20px 24px 22px; height:100%; }}
+    .xg-card-title {{ font-family:'Poppins'; font-weight:600; font-size:20px; color:{CREAM}; }}
+    .xg-card-sub {{ color:{MINT}; font-size:12.5px; margin-bottom:.3rem; }}
+    .xg-num {{ font-family:'Poppins'; font-weight:700; font-size:60px; line-height:1;
+               margin:.25rem 0 .1rem; }}
+    .xg-meta {{ color:{MINT}; font-size:12.5px; margin-bottom:.8rem; }}
+    .xg-delta {{ display:inline-block; margin-left:.45rem; padding:1px 9px; border-radius:999px;
+                 background:{BG}; border:1px solid {LINE}; color:{CREAM}; font-size:12px; }}
+    .xg-note {{ background:{BG}; border-left:3px solid {GOLD}; border-radius:8px;
+                padding:11px 13px; color:#dcebe2; font-size:14px; line-height:1.45; }}
+    .xg-foot {{ color:{MINT}; font-size:12px; line-height:1.55; border-top:1px solid {LINE};
+                padding-top:.9rem; margin-top:1.3rem; }}
+    .xg-foot b {{ color:{CREAM}; }}
+    .center-note {{ text-align:center; color:{MINT}; font-size:12.5px; margin:.6rem 0 0; }}
+
+    /* tıklanabilir saha bileşenini ortala */
+    div[data-testid="column"] iframe {{ display:block; margin:0 auto; }}
+    </style>
+    """, unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -143,14 +192,14 @@ def ai_comment(xg, ctx, side):
 
 
 def draw_pitch(shot_x, shot_y, defenders=0, gk_off=None, penalty=False):
-    fig, ax = plt.subplots(figsize=(4.0, 3.6))
-    ax.set_facecolor("#0f4433"); fig.patch.set_facecolor("#0d3d2e")
+    fig, ax = plt.subplots(figsize=(4.2, 3.7))
+    ax.set_facecolor("#0f4433"); fig.patch.set_facecolor(BG)
     ax.plot([0, 80], [120, 120], color="#3f7d66")
     ax.plot([18, 18, 62, 62], [120, 102, 102, 120], color="#3f7d66")
     ax.plot([30, 30, 50, 50], [120, 114, 114, 120], color="#3f7d66")
     ax.plot([36, 44], [120, 120], color="#eaf3ee", lw=4)
     ax.plot(40, 108, "o", color="#3f7d66", ms=3)
-    ax.plot([shot_y, 40], [shot_x, 120], "--", color="#f2a623", lw=1, alpha=0.7)
+    ax.plot([shot_y, 40], [shot_x, 120], "--", color=GOLD, lw=1, alpha=0.7)
     if not penalty:
         for i in range(defenders):
             t = 0.5 if defenders == 1 else (0.4 + i * 0.24)
@@ -161,29 +210,39 @@ def draw_pitch(shot_x, shot_y, defenders=0, gk_off=None, penalty=False):
             gt = 0.28 if gk_off else 0.07
             ax.plot(40 + (shot_y - 40) * gt, 120 + (shot_x - 120) * gt,
                     "o", color="#3b82d6", ms=10, mec="white")
-    ax.plot(shot_y, shot_x, "o", color="#f2a623", ms=12, mec="white")
+    ax.plot(shot_y, shot_x, "o", color=GOLD, ms=12, mec="white")
     ax.set_xlim(0, 80); ax.set_ylim(84, 122); ax.axis("off")
     fig.tight_layout(pad=0)
     return fig
 
 
 def xg_color(v):
-    return "#6ee7a8" if v >= 0.4 else "#f2d24a" if v >= 0.2 else "#f2a623" if v >= 0.1 else "#e88"
+    return "#6ee7a8" if v >= 0.4 else GOLD if v >= 0.2 else "#f2a623" if v >= 0.1 else "#e8917f"
 
 
-def big_xg(v, sub):
-    st.markdown(f"<div style='font-size:46px;font-weight:600;color:{xg_color(v)};line-height:1'>{v:.2f}</div>"
-                f"<div style='color:#9cc4b3;font-size:13px'>{sub}</div>", unsafe_allow_html=True)
+def result_card(title, sub_label, xg, meta, note, delta=None):
+    delta_html = ""
+    if delta is not None:
+        sign = "+" if delta >= 0 else ""
+        delta_html = f"<span class='xg-delta'>baseline farkı {sign}{delta:.2f}</span>"
+    return (f"<div class='xg-card'>"
+            f"<div class='xg-card-title'>{title}</div>"
+            f"<div class='xg-card-sub'>{sub_label}</div>"
+            f"<div class='xg-num' style='color:{xg_color(xg)}'>{xg:.2f}</div>"
+            f"<div class='xg-meta'>{meta}{delta_html}</div>"
+            f"<div class='xg-note'>{note}</div>"
+            f"</div>")
 
 
 # ---------------- UI ----------------
-st.title("xG Stüdyo — canlı şut tahmincisi")
-st.caption("Sahaya tıkla, şutu kur. Baseline model savunmayı görmez; freeze modeli savunmacı ve "
-           "kaleci konumuna tepki verir. Aynı şut iki modele de gider.")
+inject_css()
+st.markdown("<div class='xg-h1'>xG <span class='accent'>Stüdyo</span></div>", unsafe_allow_html=True)
+st.markdown("<div class='xg-sub'>Sahaya tıkla, şutu kur. Baseline model savunmayı görmez; "
+            "freeze modeli savunmacı ve kaleci konumuna tepki verir. Aynı şut iki modele de gider.</div>",
+            unsafe_allow_html=True)
 
 base_model, frz_model = load_models()
 if "shot" not in st.session_state:
-    st.session_state.shot = list(PEN_SPOT[::-1])  # (x,y) -> şu an penaltı yayı civarı degil; asagida ayarlanir
     st.session_state.shot = [104.0, 40.0]
 if "penalty" not in st.session_state:
     st.session_state.penalty = False
@@ -212,13 +271,17 @@ shot_x, shot_y = st.session_state.shot
 penalty = st.session_state.penalty
 
 if HAS_CLICK:
-    st.write("Sahaya tıklayarak şutu yerleştir (tıklayınca penaltı modu kapanır):")
+    st.markdown("<div class='pitch-hint'>Sahaya tıklayarak şutu yerleştir "
+                "(tıklayınca penaltı modu kapanır)</div>", unsafe_allow_html=True)
     fig = draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=penalty)
     (ROOT / "app").mkdir(exist_ok=True)
     fig.savefig(ROOT / "app" / "_pitch.png", dpi=100, facecolor=fig.get_facecolor(),
                 bbox_inches="tight", pad_inches=0)
     plt.close(fig)
-    coords = streamlit_image_coordinates(str(ROOT / "app" / "_pitch.png"), width=360)
+    # sahayı ortalamak için 3 kolon, ortadaki kullanılır
+    _l, _m, _r = st.columns([1, 2.2, 1])
+    with _m:
+        coords = streamlit_image_coordinates(str(ROOT / "app" / "_pitch.png"), width=440)
     if coords:
         py = coords["x"] / coords["width"] * 80
         px = 120 - coords["y"] / coords["height"] * 36
@@ -232,12 +295,14 @@ else:
     if (px, py) != (shot_x, shot_y):
         st.session_state.penalty = False
     st.session_state.shot = [px, py]; shot_x, shot_y = px, py
-    st.pyplot(draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=st.session_state.penalty))
+    _l, _m, _r = st.columns([1, 2.2, 1])
+    with _m:
+        st.pyplot(draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=st.session_state.penalty))
 
 penalty = st.session_state.penalty
 dist = float(np.hypot(120 - shot_x, 40 - shot_y))
 ang = subtended_angle(shot_x, shot_y)
-sub = f"{dist:.0f} m · {ang:.0f}° açı" + (" · penaltı" if penalty else "")
+meta = f"{dist:.0f} m · {ang:.0f}° açı" + (" · penaltı" if penalty else "")
 
 if penalty:
     # Penaltı: kaleci çizgide ortada (freeze frame'de GK çoğu kez yok -> NaN),
@@ -259,21 +324,25 @@ ctx_b = dict(model="baseline", dist=dist, ang=ang, head=head, pres=pres, penalty
 ctx_f = dict(model="freeze", dist=dist, ang=ang, head=head, pres=pres,
              cone=cone, gk_off=gk_off, penalty=penalty)
 
-col_b, col_f = st.columns(2)
-with col_b:
-    st.subheader("Baseline model")
-    st.caption("dokunulmamış ilk model · 75k şut")
-    big_xg(xb, sub)
-    st.info(ai_comment(xb, ctx_b, "b"))
-    st.caption("Savunmacı kontrolünü değiştirsen de bu değer sabit — model savunmayı görmez.")
-with col_f:
-    st.subheader("Freeze model")
-    st.caption("freeze-eğitimli · gelişmiş kontroller")
-    big_xg(xf, sub + f" · baseline farkı {'+' if xf - xb >= 0 else ''}{xf - xb:.2f}")
-    st.info(ai_comment(xf, ctx_f, "f"))
+note_b = ai_comment(xb, ctx_b, "b")
+note_f = ai_comment(xf, ctx_f, "f")
 
-st.divider()
-st.caption("Her iki model 75k tam veride eğitildi, kalibrasyonları hizalı (ort. tahmin ≈ gol oranı %11.2). "
-           "Freeze, baseline'a göre +0.0166 AUC kazandırıyor (0.802 → 0.818) ve StatsBomb'un kendi modelini "
-           "(0.819) neredeyse yakalıyor. Mesaj: baseline savunmaya kör, freeze tepki veriyor. · AI yorumları "
-           "senaryo başına havuzlanır ve cache'lenir (kota minimal).")
+col_b, col_f = st.columns(2, gap="large")
+with col_b:
+    st.markdown(result_card("Baseline model", "dokunulmamış ilk model · 75k şut",
+                            xb, meta, note_b), unsafe_allow_html=True)
+with col_f:
+    st.markdown(result_card("Freeze model", "freeze-eğitimli · gelişmiş kontroller",
+                            xf, meta, note_f, delta=xf - xb), unsafe_allow_html=True)
+
+st.markdown("<div class='center-note'>Baseline savunmayı görmez — savunmacı/kaleci kontrolü "
+            "yalnızca freeze modeli değiştirir.</div>", unsafe_allow_html=True)
+
+st.markdown(
+    "<div class='xg-foot'>Her iki model 75k tam veride eğitildi, kalibrasyonları hizalı "
+    "(ort. tahmin ≈ gol oranı %11.2). Match-grouped çapraz doğrulamada freeze, baseline'a göre "
+    "<b>+0.014 AUC</b> kazandırıyor (%95 GA sıfırı dışlıyor) ve StatsBomb'un kendi modelinden "
+    "<b>istatistiksel olarak ayırt edilemiyor</b> (gap GA sıfırı kapsıyor). Mesaj: baseline "
+    "savunmaya kör, freeze tepki veriyor. · AI yorumları senaryo başına havuzlanır ve "
+    "cache'lenir (kota minimal).</div>",
+    unsafe_allow_html=True)

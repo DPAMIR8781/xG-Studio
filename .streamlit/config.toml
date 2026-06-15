@@ -1,0 +1,13 @@
+# ~/xG-Studio/.streamlit/config.toml
+# Deck paleti: koyu yeşil + gold. Streamlit'in kendi temasını deck'e hizalar.
+[theme]
+base = "dark"
+primaryColor = "#F2A91E"
+backgroundColor = "#0C3326"
+secondaryBackgroundColor = "#11402F"
+textColor = "#F3F7F4"
+font = "sans serif"
+baseRadius = "medium"
+
+[server]
+headless = true
