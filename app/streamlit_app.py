@@ -192,9 +192,13 @@ def ai_comment(xg, ctx, side):
 
 
 def draw_pitch(shot_x, shot_y, defenders=0, gk_off=None, penalty=False):
-    fig, ax = plt.subplots(figsize=(4.2, 3.7))
+    fig, ax = plt.subplots(figsize=(5.0, 4.2))
     ax.set_facecolor("#0f4433"); fig.patch.set_facecolor(BG)
+    # kapalı saha kutusu: kale çizgisi (üst) + sol/sağ/alt kenarlar
     ax.plot([0, 80], [120, 120], color="#3f7d66")
+    ax.plot([0, 0], [85, 120], color="#3f7d66")
+    ax.plot([80, 80], [85, 120], color="#3f7d66")
+    ax.plot([0, 80], [85, 85], color="#3f7d66")
     ax.plot([18, 18, 62, 62], [120, 102, 102, 120], color="#3f7d66")
     ax.plot([30, 30, 50, 50], [120, 114, 114, 120], color="#3f7d66")
     ax.plot([36, 44], [120, 120], color="#eaf3ee", lw=4)
@@ -211,7 +215,7 @@ def draw_pitch(shot_x, shot_y, defenders=0, gk_off=None, penalty=False):
             ax.plot(40 + (shot_y - 40) * gt, 120 + (shot_x - 120) * gt,
                     "o", color="#3b82d6", ms=10, mec="white")
     ax.plot(shot_y, shot_x, "o", color=GOLD, ms=12, mec="white")
-    ax.set_xlim(0, 80); ax.set_ylim(84, 122); ax.axis("off")
+    ax.set_xlim(-2, 82); ax.set_ylim(83, 122); ax.axis("off")
     fig.tight_layout(pad=0)
     return fig
 
@@ -275,13 +279,12 @@ if HAS_CLICK:
                 "(tıklayınca penaltı modu kapanır)</div>", unsafe_allow_html=True)
     fig = draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=penalty)
     (ROOT / "app").mkdir(exist_ok=True)
-    fig.savefig(ROOT / "app" / "_pitch.png", dpi=100, facecolor=fig.get_facecolor(),
-                bbox_inches="tight", pad_inches=0)
+    fig.savefig(ROOT / "app" / "_pitch.png", dpi=110, facecolor=fig.get_facecolor())
     plt.close(fig)
     # sahayı ortalamak için 3 kolon, ortadaki kullanılır
-    _l, _m, _r = st.columns([1, 2.2, 1])
+    _l, _m, _r = st.columns([1, 3, 1])
     with _m:
-        coords = streamlit_image_coordinates(str(ROOT / "app" / "_pitch.png"), width=440)
+        coords = streamlit_image_coordinates(str(ROOT / "app" / "_pitch.png"), width=520)
     if coords:
         py = coords["x"] / coords["width"] * 80
         px = 120 - coords["y"] / coords["height"] * 36
@@ -295,7 +298,7 @@ else:
     if (px, py) != (shot_x, shot_y):
         st.session_state.penalty = False
     st.session_state.shot = [px, py]; shot_x, shot_y = px, py
-    _l, _m, _r = st.columns([1, 2.2, 1])
+    _l, _m, _r = st.columns([1, 3, 1])
     with _m:
         st.pyplot(draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=st.session_state.penalty))
 
