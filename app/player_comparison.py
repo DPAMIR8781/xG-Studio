@@ -22,7 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "models" / "xg_model_player_xgboost.joblib"
 PEN_SPOT = (108.0, 40.0)
 
