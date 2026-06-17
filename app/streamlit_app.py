@@ -301,15 +301,26 @@ penalty = st.session_state.penalty
 if HAS_CLICK:
     st.markdown("<div class='pitch-hint'>Sahaya tıklayarak şutu yerleştir "
                 "(tıklayınca penaltı modu kapanır)</div>", unsafe_allow_html=True)
-    fig = draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=penalty)
-    (ROOT / "app").mkdir(exist_ok=True)
-    fig.savefig(ROOT / "app" / "_pitch.png", dpi=110, facecolor=fig.get_facecolor())
-    plt.close(fig)
+    # Saha PNG'sini YALNIZCA değişince yeniden üret. Aksi halde her rerun'da
+    # (Kafa/Baskı toggle'ı, AI yorumu vb. sahayı değiştirmese bile) dosya yeniden
+    # yazılıyor ve component görüntüyü "yeniden yüklüyor" → titreme. Sahayı sadece
+    # konum/savunmacı/kaleci/penaltı değişince çiz.
+    pitch_path = ROOT / "app" / "_pitch.png"
+    pitch_key = (round(shot_x, 2), round(shot_y, 2), int(cone), bool(gk_off), bool(penalty))
+    if st.session_state.get("_pitch_key") != pitch_key or not pitch_path.exists():
+        (ROOT / "app").mkdir(exist_ok=True)
+        fig = draw_pitch(shot_x, shot_y, defenders=cone, gk_off=gk_off, penalty=penalty)
+        fig.savefig(pitch_path, dpi=110, facecolor=fig.get_facecolor())
+        plt.close(fig)
+        st.session_state["_pitch_key"] = pitch_key
     # sahayı ortalamak için 3 kolon, ortadaki kullanılır
     _l, _m, _r = st.columns([1, 3, 1])
     with _m:
-        coords = streamlit_image_coordinates(str(ROOT / "app" / "_pitch.png"), width=520)
-    if coords:
+        # sabit key → component her rerun'da yeniden mount olmaz (titreme azalır)
+        coords = streamlit_image_coordinates(str(pitch_path), width=520, key="pitch")
+    # aynı tıklamayı tekrar işleme (sabit key ile sonsuz rerun'ı da engeller)
+    if coords is not None and coords != st.session_state.get("_last_click"):
+        st.session_state["_last_click"] = coords
         py = coords["x"] / coords["width"] * 80
         px = 120 - coords["y"] / coords["height"] * 36
         st.session_state.shot = [float(np.clip(px, 85, 119)), float(np.clip(py, 2, 78))]
