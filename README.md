@@ -9,6 +9,8 @@ link'i olan herkesin deneyebileceği çalışan bir ürün.
 
 🎮 **Canlı demo (kurulumsuz):** https://ubtuna.github.io/xG-Studio/
 
+![xG Stüdyo — canlı baseline vs freeze tahmini](assets/demo.png)
+
 👥 **Ekip:** Uğur Batuhan Tuna · Doruk Pamir · Mert Kaan Topuz
 
 ---
