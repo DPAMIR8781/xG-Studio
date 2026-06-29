@@ -122,6 +122,10 @@ feature listeleri, dağılım-dışı (OOD) guard ve metrikleri içerir.
 Kalibrasyon hizalı: ortalama tahmin ≈ gerçek gol oranı (~0.112), yani "%14" gerçekten
 ~%14 anlamına gelir.
 
+![Kalibrasyon eğrisi — xG Stüdyo vs StatsBomb vs mükemmel kalibrasyon](assets/calibration.png)
+
+*Kalibrasyon eğrisi: tahmin edilen xG (x) ile gerçekleşen gol oranı (y). Modelimiz (mavi) köşegene — mükemmel kalibrasyona — neredeyse yapışık, yani "%14 gerçekten ~%14" demektir. StatsBomb'un kendi xG'si (turuncu) ile aynı hizada; bazı aralıklarda köşegene daha da yakın.*
+
 **Ana çıkarım:** Tavanı algoritma değil **bilgi** belirliyordu. XGBoost ↔ LightGBM ve
 tuning fark yaratmadı; StatsBomb'un üstünlüğü kullandığı şut-anı oyuncu konumlarından
 (freeze frame) geliyordu. Bu bilgiyi modele besleyince eksik parça kapandı.
